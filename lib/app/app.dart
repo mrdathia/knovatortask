@@ -5,14 +5,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(key: const ValueKey('MyApp'),
-      debugShowCheckedModeBanner: false,
-      home: const CoinsPage()
-    );
+    return MaterialApp(key: const ValueKey('MyApp'), debugShowCheckedModeBanner: false, home: const CoinsPage());
   }
 }
 
-class CoinsPage extends StatelessWidget{
+class CoinsPage extends StatelessWidget {
   const CoinsPage({super.key});
 
   @override
