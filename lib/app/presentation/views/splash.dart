@@ -42,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     } catch (_) {
       // Handle error silently or show snackbar if needed
     } finally {
-      // After data is fetched, navigate to Dashboard
+      await Future.delayed(Duration(seconds: 2));
       if (mounted) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const Dashboard()));
       }

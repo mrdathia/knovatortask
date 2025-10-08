@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:knovatortask/app/core/utils/constants.dart';
@@ -6,8 +8,44 @@ import '../../di_setup.dart';
 import '../controllers/coins_controller.dart';
 import 'coins_search_page.dart';
 
-class Dashboard extends StatelessWidget {
+class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
+
+  @override
+  State<Dashboard> createState() => _DashboardState();
+}
+
+class _DashboardState extends State<Dashboard> {
+  final PortfolioController controller = getIt<PortfolioController>();
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Start auto price update every 5 seconds
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+      if (controller.portfolio.isNotEmpty) {
+        await controller.refreshAllPrices();
+        // Show toast when updated
+        Get.snackbar(
+          'Prices Updated',
+          'Your portfolio prices have been refreshed',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.black87,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 1),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,13 +103,37 @@ class Dashboard extends StatelessWidget {
                   itemCount: controller.portfolio.length,
                   itemBuilder: (context, index) {
                     final coin = controller.portfolio[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: ListTile(
-                        leading: CircleAvatar(child: Text(coin['symbol']?.toUpperCase() ?? '?')),
-                        title: Text(coin['name'] ?? 'Unknown'),
-                        subtitle: Text(
-                          "Quantity: ${coin['quantity'] ?? 0} • Price: \$${(coin['price'] ?? 0).toStringAsFixed(AppUtilConstants.pricePrecision)}",
+
+                    return Dismissible(
+                      key: ValueKey(coin['id']),
+                      direction: DismissDirection.endToStart, // swipe left to delete
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        color: Colors.red,
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      onDismissed: (_) {
+                        controller.removeCoin(coin['id']);
+                        Get.snackbar(
+                          'Removed',
+                          '${coin['name']} removed from portfolio',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.black87,
+                          colorText: Colors.white,
+                          margin: const EdgeInsets.all(16),
+                          duration: const Duration(seconds: 1),
+                        );
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          leading: CircleAvatar(child: Text(coin['symbol']?.toUpperCase() ?? '?')),
+                          title: Text(coin['name'] ?? 'Unknown'),
+                          subtitle: Text(
+                            "Quantity: ${coin['quantity'] ?? 0} • Price: \$${(coin['price'] ?? 0).toStringAsFixed(2)}",
+                          ),
                         ),
                       ),
                     );

@@ -52,6 +52,7 @@ class _CoinDetailSheetState extends State<CoinDetailSheet> {
     );
 
     if (mounted) Navigator.of(context).pop(); // Close bottom sheet
+    if (mounted) Navigator.of(context).pop(); // Close bottom sheet
   }
 
   @override
