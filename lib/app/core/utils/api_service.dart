@@ -6,13 +6,11 @@ import 'package:http/retry.dart';
 
 Map<String, dynamic> genErrorResponse(String error, int code) => {"success": false, "error": error, "status": code};
 
-
 class ApiModule {
   http.Client get client => http.Client();
 
   ApiService apiService(http.Client client) => ApiService(client);
 }
-
 
 class ApiService {
   final http.Client _client;
@@ -20,9 +18,9 @@ class ApiService {
   ApiService(this._client);
 
   Future<Map<String, dynamic>> _performRequest(
-      Future<http.Response> Function() request, {
-        Duration timeout = const Duration(seconds: 10),
-      }) async {
+    Future<http.Response> Function() request, {
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
     try {
       final response = await request().timeout(timeout);
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -47,11 +45,11 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> retryPostRequest(
-      String url,
-      Map<String, String> headers,
-      Map<String, dynamic> body, {
-        int retries = 2,
-      }) async {
+    String url,
+    Map<String, String> headers,
+    Map<String, dynamic> body, {
+    int retries = 2,
+  }) async {
     final retryClient = RetryClient(_client, retries: retries);
     try {
       return await _performRequest(() => retryClient.post(Uri.parse(url), headers: headers, body: jsonEncode(body)));

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:get/get.dart';
+
+import '../../di_setup.dart';
+import '../controllers/coins_controller.dart';
 
 class CoinDetailSheet extends StatefulWidget {
   final Map<String, dynamic> coin;
@@ -12,35 +14,44 @@ class CoinDetailSheet extends StatefulWidget {
 }
 
 class _CoinDetailSheetState extends State<CoinDetailSheet> {
+  final PortfolioController controller = getIt<PortfolioController>();
+  final TextEditingController quantityController = TextEditingController();
   double? price;
   bool loading = true;
-  final TextEditingController quantityController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    fetchPrice();
+    _fetchPrice();
   }
 
-  Future<void> fetchPrice() async {
-    final coinId = widget.coin['id'];
-    final url =
-        'https://api.coingecko.com/api/v3/simple/price?ids=$coinId&vs_currencies=usd';
-
+  Future<void> _fetchPrice() async {
+    setState(() => loading = true);
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          price = (data[coinId]?['usd'] as num?)?.toDouble();
-          loading = false;
-        });
-      } else {
-        setState(() => loading = false);
-      }
+      price = await controller.fetchPrice(widget.coin['id']);
     } catch (e) {
+      price = null;
+    } finally {
       setState(() => loading = false);
     }
+  }
+
+  void _addCoin() async {
+    final qty = double.tryParse(quantityController.text);
+    if (qty == null || qty <= 0 || price == null) {
+      Get.snackbar('Invalid', 'Please enter a valid quantity');
+      return;
+    }
+
+    await controller.addOrUpdateCoin(
+      id: widget.coin['id'],
+      name: widget.coin['name'],
+      symbol: widget.coin['symbol'],
+      quantity: qty,
+      price: price!,
+    );
+
+    if (mounted) Navigator.of(context).pop(); // Close bottom sheet
   }
 
   @override
@@ -48,12 +59,7 @@ class _CoinDetailSheetState extends State<CoinDetailSheet> {
     final coin = widget.coin;
 
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        top: 16,
-        left: 16,
-        right: 16,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, top: 16, left: 16, right: 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,17 +68,8 @@ class _CoinDetailSheetState extends State<CoinDetailSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                coin['name'] ?? '',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
+              Text(coin['name'] ?? '', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
             ],
           ),
           const SizedBox(height: 10),
@@ -85,19 +82,12 @@ class _CoinDetailSheetState extends State<CoinDetailSheet> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Current Price: \$${price!.toStringAsFixed(2)}",
-                  style: const TextStyle(fontSize: 16),
-                ),
+                Text("Current Price: \$${price!.toStringAsFixed(2)}", style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 20),
                 TextField(
                   controller: quantityController,
-                  keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Quantity',
-                    border: OutlineInputBorder(),
-                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Quantity', border: OutlineInputBorder()),
                   onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: 20),
@@ -105,20 +95,9 @@ class _CoinDetailSheetState extends State<CoinDetailSheet> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                      (quantityController.text.isEmpty) ? Colors.grey : Colors.blue,
+                      backgroundColor: (quantityController.text.isEmpty) ? Colors.grey : Colors.blue,
                     ),
-                    onPressed: quantityController.text.isEmpty
-                        ? null
-                        : () {
-                      Navigator.pop(context); // close bottom sheet
-                      Navigator.pop(context, {
-                        "coin": coin,
-                        "quantity":
-                        double.tryParse(quantityController.text) ?? 0,
-                        "price": price,
-                      }); // also go back with data
-                    },
+                    onPressed: quantityController.text.isEmpty ? null : _addCoin,
                     child: const Text("Add"),
                   ),
                 ),

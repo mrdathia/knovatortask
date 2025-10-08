@@ -27,9 +27,7 @@ class _CoinsSearchPageState extends State<CoinsSearchPage> {
     final query = _controller.text.toLowerCase();
     setState(() {
       filteredCoins = coinsController.coins
-          .where((coin) =>
-      coin['name']!.toLowerCase().contains(query) ||
-          coin['symbol']!.toLowerCase().contains(query))
+          .where((coin) => coin['name']!.toLowerCase().contains(query) || coin['symbol']!.toLowerCase().contains(query))
           .toList();
     });
   }
@@ -38,9 +36,7 @@ class _CoinsSearchPageState extends State<CoinsSearchPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (context) {
         return CoinDetailSheet(coin: coin);
       },
@@ -54,10 +50,7 @@ class _CoinsSearchPageState extends State<CoinsSearchPage> {
         automaticallyImplyLeading: true,
         title: TextField(
           controller: _controller,
-          decoration: const InputDecoration(
-            hintText: 'Search coins...',
-            border: InputBorder.none,
-          ),
+          decoration: const InputDecoration(hintText: 'Search coins...', border: InputBorder.none),
         ),
       ),
       body: Padding(

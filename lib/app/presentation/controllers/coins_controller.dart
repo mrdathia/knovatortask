@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:get/get.dart';
+
 import '../../core/utils/storage_service.dart';
 import '../../domain/usecases/fetch_coin_price.dart';
 import '../../domain/usecases/fetch_coins_list.dart';
@@ -56,9 +58,7 @@ class PortfolioController extends GetxController {
     }
     final lower = query.toLowerCase();
     searchResults.value = coins
-        .where((c) =>
-    c['name'].toLowerCase().contains(lower) ||
-        c['symbol'].toLowerCase().contains(lower))
+        .where((c) => c['name'].toLowerCase().contains(lower) || c['symbol'].toLowerCase().contains(lower))
         .toList();
   }
 
@@ -83,13 +83,7 @@ class PortfolioController extends GetxController {
     if (index != -1) {
       portfolio[index]['quantity'] += quantity;
     } else {
-      portfolio.add({
-        'id': id,
-        'name': name,
-        'symbol': symbol,
-        'quantity': quantity,
-        'price': price,
-      });
+      portfolio.add({'id': id, 'name': name, 'symbol': symbol, 'quantity': quantity, 'price': price});
     }
     await savePortfolio();
     portfolio.refresh();
@@ -102,11 +96,7 @@ class PortfolioController extends GetxController {
   }
 
   /// ==== Total portfolio value ====
-  double get totalValue => portfolio.fold(
-    0.0,
-        (sum, e) =>
-    sum + ((e['price'] ?? 0.0) * (e['quantity'] ?? 0.0)),
-  );
+  double get totalValue => portfolio.fold(0.0, (sum, e) => sum + ((e['price'] ?? 0.0) * (e['quantity'] ?? 0.0)));
 
   /// ==== Refresh all prices via use case ====
   Future<void> refreshAllPrices() async {
