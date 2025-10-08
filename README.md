@@ -72,7 +72,7 @@ flutter run
 4. (Optional) Build APK:
 
 ```bash
-flutter build apk --release
+flutter build apk --release --split-per-abi
 ```
 
 ---
